@@ -1,0 +1,578 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 2. Transcription and Classification with AI\nThis section uses AI to transcribe and interpret the voice message:\n\n- `OpenAI - Transcribe Audio`: Converts voice audio to text using OpenAI Whisper (language: Spanish).\n- `AI - Classify Category & Concept`: Extracts:\n  - `Category`: a keyword or label mentioned in the message.\n  - `Concept`: a concise idea extracted from the message.\n\nCustom instructions are provided to ensure strict JSON output.\n- `AI - Validate Structured Output`: Validates that the response from the AI matches the expected JSON structure.\n- `Format Data for Storage`: Prepares and maps the final data to be saved in spreadsheets and files.\n",
+        "height": 807,
+        "width": 777
+      },
+      "id": "da60ddfe-a722-488d-9b6a-99e13b143e96",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        500,
+        580
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 1. Receive Voice Message\nThis section handles incoming audio messages from Telegram:\n\n- `Telegram - On New Voice Message`: Triggers the workflow when a new message is received via the Telegram bot.\n- `Telegram - Download Voice File`: Downloads the voice message using its `file_id`.\n\nThis audio file will be passed to the transcription step.\n",
+        "height": 800,
+        "width": 500,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        580
+      ],
+      "id": "5758aae6-366a-4981-96a8-e23b524b462f",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-pro-exp",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        800,
+        1240
+      ],
+      "id": "6c211317-a6a3-4065-a683-100cd555689f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "dWMJRPe6dFKtEkcB",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "*"
+        ],
+        "additionalFields": {}
+      },
+      "id": "72e3d6f3-74f6-4a76-ab5d-022b53eb448a",
+      "name": "Telegram - On New Voice Message",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        100,
+        1020
+      ],
+      "webhookId": "ba882b46-88af-4029-a7a6-19b4ad8e2657",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": {
+          "id": "wJSVKbxOs9pSjQX0",
+          "name": "Telegram account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram - On New Voice Message').item.json.message.voice.file_id }}"
+      },
+      "id": "b6bbafca-8851-4ee5-8f38-67aa2fc68523",
+      "name": "Telegram - Download Voice File",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        320,
+        1020
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "15a030da-5fb4-400b-9502-06bf6c7f5fc5",
+      "credentials": {
+        "telegramApi": {
+          "id": "wJSVKbxOs9pSjQX0",
+          "name": "Telegram account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {
+          "language": "es"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        540,
+        1020
+      ],
+      "id": "2a889e56-3722-4d8c-9b0e-5372baa7dbc1",
+      "name": "OpenAI - Transcribe Audio",
+      "credentials": {
+        "openAiApi": {
+          "id": "A4uWvd7RRHJWDUH0",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Eres un agente experto en analizar mensajes de texto transcritos. Tu objetivo es:\n\n1. Leer y comprender el texto proporcionado (transcripción de una nota de voz).\n2. Detectar la categoría, que suele venir indicada en el texto (por ejemplo, “categoría Racks” o “guardar en ideas”).\n3. Extraer siempre un concepto clave. Este concepto debe ser conciso y proceder únicamente de la información presente en la nota.\n4. Reducir redundancias solo cuando sea estrictamente necesario.\n5. Devolver el resultado en JSON estricto con la siguiente estructura y campos obligatorios:\n\n```\n{\n  \"Categoria\": \"Nombre de la categoría detectada\",\n  \"Concepto\": \"Concepto extraído\"\n}\n```\n\nImportante: no incluyas información adicional ni campos extra en el resultado, y mantén la ortografía exacta que aparezca en la transcripción para la categoría y el concepto."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        760,
+        1020
+      ],
+      "id": "8ffb67c9-5ae0-4dcb-8652-c3910ca79e83",
+      "name": "AI - Classify Category & Concept"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"Categoria\": \"Adrian\",\n  \"Concepto\": \"Estrategia de crecimiento\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        1240
+      ],
+      "id": "98e97ec0-0dc9-4de9-a47f-46124c99ad8c",
+      "name": "AI - Validate Structured Output"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "80e4f5c7-8f0a-4bba-8256-4d7599deefc7",
+              "name": "result.file_unique_id",
+              "value": "={{ $('Telegram - Download Voice File').item.json.result.file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c1b1b17b-2731-4d19-a4fd-77eebd53c513",
+              "name": "Categoria",
+              "value": "={{ $json.output.Categoria }}",
+              "type": "string"
+            },
+            {
+              "id": "33ad0e3b-2af0-4ab9-9cde-a1800d6e758f",
+              "name": "Concepto",
+              "value": "={{ $json.output.Concepto }}",
+              "type": "string"
+            },
+            {
+              "id": "6e6e04f4-eaca-47af-b845-6fb2971e8196",
+              "name": "Transcripción",
+              "value": "={{ $('OpenAI - Transcribe Audio').item.json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1140,
+        1020
+      ],
+      "id": "d1afce5e-e41c-4157-9cfc-60433ea8416e",
+      "name": "Format Data for Storage"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1H7tnr7EkKEGnFKavOpwO2HIxiOORlo8Z0r92oxezws0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "file_unique_id": "={{ $json.result.file_unique_id }}",
+            "Categoria": "={{ $json.Categoria }}",
+            "Concepto": "={{ $json.Concepto }}",
+            "Transcripción": "={{ $json['Transcripción'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "file_unique_id",
+              "displayName": "file_unique_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Concepto",
+              "displayName": "Concepto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Transcripción",
+              "displayName": "Transcripción",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1460,
+        920
+      ],
+      "id": "ee3913a0-0e2f-4220-84a3-4f56a3bdbca0",
+      "name": "Google Sheets - Append Entry",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XwcQou9m7t6BpflQ",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 3. Store Data in Sheets and Drive\nThis section saves structured data both in a spreadsheet and as a CSV file:\n\n- `Google Sheets - Append Entry`: Appends a row with the values: `file_unique_id`, `Category`, `Concept`, and `Transcription`. Acts as a central searchable record.\n- `Convert JSON to CSV`: Converts the JSON into a CSV file, naming it using `file_unique_id`.\n- `Google Drive - Upload CSV`: Uploads the CSV to a specific folder in Google Drive.\n\nEnsures you have both structured data and a downloadable document version.\n",
+        "height": 807,
+        "width": 457,
+        "color": 5
+      },
+      "id": "0041591c-01e8-4aac-8112-ffb8d54a821b",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1300,
+        580
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "={{ $json.result.file_unique_id }}",
+        "options": {
+          "delimiter": ",",
+          "fileName": "={{ $json.result.file_unique_id }}",
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        1120
+      ],
+      "id": "039c71e0-8178-4a70-b49b-42144b1ca99f",
+      "name": "Convert JSON to CSV"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "={{ $('Format Data for Storage').item.json.result.file_unique_id }}",
+        "name": "={{ $('Format Data for Storage').item.json.result.file_unique_id }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1580,
+        1120
+      ],
+      "id": "7caed67d-f07f-4dd8-aac9-344659564eef",
+      "name": "Google Drive - Upload CSV",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Q81Rv6JRCYrQifbG",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 4. Notify User on Telegram\nThis node sends a confirmation message to the original Telegram user:\n\n✅ Message was received  \n✅ Audio was transcribed and classified  \n✅ Data was saved in Sheets and Drive\n\nProvides immediate confirmation for a better user experience.\n",
+        "height": 800,
+        "width": 280,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        580
+      ],
+      "id": "a8da31f0-db60-4884-88ab-01f9b39814a7",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram - On New Voice Message').item.json.message.chat.id }}",
+        "text": "Mensaje recibido",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "a7cd017e-8ecf-4431-8292-f9b2913f3042",
+      "name": "Telegram - Send Confirmation",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1840,
+        1120
+      ],
+      "typeVersion": 1,
+      "webhookId": "f46e8a2e-5ec5-4ddd-8828-ffadcc50a79b",
+      "credentials": {
+        "telegramApi": {
+          "id": "wJSVKbxOs9pSjQX0",
+          "name": "Telegram account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Classify Telegram Voice Notes to Google Sheets and Drive (Low-Cost AI)\n\nThis workflow automates the collection and organization of voice messages sent to a Telegram bot.\n\n### Key Features:\n1. Receives voice notes via Telegram\n2. Transcribes and analyzes the content using OpenAI and a structured prompt\n3. Classifies the message by `Category` and `Concept`\n4. Saves results in Google Sheets and as CSV in Google Drive\n5. Sends confirmation back to the user on Telegram\n\n### Optimized for Low AI Costs:\n- **Single-step transcription** using OpenAI Whisper avoids unnecessary language models for audio.\n- **Targeted prompt engineering** in the AI node reduces token usage and ensures strict output format.\n- **Structured parser** prevents errors and unnecessary reruns.\n- Avoids redundant API calls or overuse of large models.\n\nIdeal for:\n- Organizing thoughts or meeting notes\n- Capturing ideas on the go\n- Classifying feedback from teams or clients\n\n⚡️ Simple, efficient, and cost-aware.\n\n",
+        "height": 540,
+        "width": 2060
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f87bd30a-a931-4b60-bcb7-d661bf0b6731",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        180,
+        1900
+      ],
+      "id": "f421e8de-6dcd-4bc4-b352-4a98e9a50723",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "=1724752049",
+        "text": "=⚠️ *Workflow Error Alert* ⚠️  \n*Workflow:* Classify Telegram Voice Notes  \n*Error:* {{$json[\"error\"].message}}  \n*Time:* {{$now}}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "517a7929-ff59-48a0-ab5d-ac30ad865822",
+      "name": "Telegram - Send Error Mesage",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        600,
+        1900
+      ],
+      "typeVersion": 1,
+      "webhookId": "f46e8a2e-5ec5-4ddd-8828-ffadcc50a79b",
+      "credentials": {
+        "telegramApi": {
+          "id": "wJSVKbxOs9pSjQX0",
+          "name": "Telegram account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Error Handling & Notification\n\nThis section captures any unexpected errors during workflow execution and sends an immediate alert via Telegram:\n\n- **`Error Trigger`**: Activates when any node in the workflow fails. It ensures that issues are detected automatically without manual monitoring.\n  \n- **`Telegram - Send Error Message`**: Sends a predefined error notification to a specific Telegram chat (`chatId: 1724752049`). This allows real-time awareness of failures, enabling quick action.\n\n### Why It's Important:\n- Ensures you're promptly informed of issues.\n- Helps maintain workflow reliability and minimizes downtime.\n- Can be expanded to include detailed error messages or log integrations.\n\n💡 *Tip:* You can enhance this by including dynamic error details using expressions like:\n\n⚠️ *Workflow Error Alert* ⚠️  \n*Workflow:* Classify Telegram Voice Notes  \n*Error:* {{$json[\"error\"].message}}  \n*Time:* {{$now}}\n\n",
+        "height": 680,
+        "width": 1000,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        1420
+      ],
+      "id": "def1db6d-9ba9-4951-bd24-12d1bd53519b",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI - Classify Category & Concept",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - On New Voice Message": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Download Voice File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Download Voice File": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Transcribe Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Transcribe Audio": {
+      "main": [
+        [
+          {
+            "node": "AI - Classify Category & Concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Classify Category & Concept": {
+      "main": [
+        [
+          {
+            "node": "Format Data for Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Validate Structured Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI - Classify Category & Concept",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Data for Storage": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Append Entry",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert JSON to CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert JSON to CSV": {
+      "main": [
+        [
+          {
+            "node": "Google Drive - Upload CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive - Upload CSV": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Send Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Send Error Mesage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9b32a8fd-0eb6-4094-9903-62141524d447",
+  "meta": {
+    "instanceId": "06b7c301d43c39d844e01c02520fca0751ee685608ec5cbadf8c0db83f2e0e5a"
+  },
+  "id": "FUVFM9bLOwSnagl8",
+  "tags": []
+}
