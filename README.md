@@ -22,6 +22,8 @@ AI workflow built with [n8n](https://n8n.io) to process voice messages sent via 
 
 ![image](https://github.com/user-attachments/assets/7e5845d1-78c2-46aa-99d7-0e2a23ddb56a)
 
+⚠️ Remember: this JSON contains only the workflow logic. To make it work, you need to manually configure your credentials and variables inside n8n after importing the workflow.
+
 ---
 
 ## 🏗️ Architecture
