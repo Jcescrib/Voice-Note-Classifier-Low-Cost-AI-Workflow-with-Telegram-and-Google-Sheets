@@ -2,6 +2,12 @@
 
 This document describes the internal structure and logic of the n8n automation workflow for transcribing and classifying Telegram voice messages.
 
+
+---
+![image](https://github.com/user-attachments/assets/3ac676a3-3acf-44ce-a625-848cf028d9d9)
+
+![image](https://github.com/user-attachments/assets/62dbccb4-022f-41bb-b6a9-44a3f0923624)
+
 ---
 
 ## 🔄 High-Level Flow
@@ -38,7 +44,9 @@ This document describes the internal structure and logic of the n8n automation w
 10. **Error Handling**  
    If any step fails, an alert message is sent to an admin chat.
 
+
 ---
+
 
 ## 🧱 Main Technologies
 
@@ -52,7 +60,9 @@ This document describes the internal structure and logic of the n8n automation w
 | **n8n**               | Workflow engine             |
 | **Railway**           | Hosting and execution       |
 
+
 ---
+
 
 ## ⚙️ Node Map Summary
 
@@ -70,7 +80,9 @@ This document describes the internal structure and logic of the n8n automation w
 | Telegram - Send Confirmation    | Notifies the user via Telegram                     |
 | Error Trigger + Error Message   | Captures errors and notifies admin chat            |
 
+
 ---
+
 
 ## 📊 Google Sheets Structure
 
@@ -90,7 +102,11 @@ The spreadsheet must contain the following columns (in this exact order):
 | AgJ6ABCdEfG12... | Ideas | Optimize logistics | "Category ideas. We need to reduce times..." |
 
 ## 📌 Notes
+
+
 ---
+
+
 - This architecture enables fast classification and data logging of ideas, thoughts, or meeting notes received via voice.
 - Ensure all API credentials are set via environment variables.
 - The workflow is optimized for low-cost usage by limiting token-heavy steps.
